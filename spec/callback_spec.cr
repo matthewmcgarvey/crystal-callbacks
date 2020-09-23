@@ -3,22 +3,21 @@ require "./spec_helper"
 abstract class Operation
   include Callback
 
-  register_callback :before_run
-  register_callback :after_run, result
+  register_event :run, result
 end
 
 abstract class SaveOperation(T) < Operation
-  register_callback :before_save
-  register_callback :after_save, result : T
-  register_callback :after_commit, result : T
+  register_event :save
+  register_event :commit
 
   def save(item : T)
-    call_before_run
-    call_before_save
-    puts "SAVING..."
-    call_after_commit(item)
-    call_after_save(item)
-    call_after_run(item)
+    run_event :run do
+      run_event :save do
+        run_event :commit do
+          puts "SAVING..."
+        end
+      end
+    end
   end
 end
 
@@ -28,6 +27,13 @@ class MySaveOp < SaveOperation(String)
   after_commit :post_commit
   after_run :finishing
   after_save :saved
+  around_run :woah
+
+  def woah
+    puts "BEFORE"
+    result = yield
+    puts "AFTER"
+  end
 
   def validation
     puts "Validating..."
@@ -37,7 +43,7 @@ class MySaveOp < SaveOperation(String)
     puts "Modifying..."
   end
 
-  def post_commit(result)
+  def post_commit
     puts "Post committing..."
   end
 
@@ -45,7 +51,7 @@ class MySaveOp < SaveOperation(String)
     puts "Finishing..."
   end
 
-  def saved(result)
+  def saved
     puts "Saved..."
   end
 end
