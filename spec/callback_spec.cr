@@ -3,56 +3,35 @@ require "./spec_helper"
 abstract class Operation
   include Callback
 
-  register_event :run, result
-end
+  register_event :before_run
+  register_event :after_run, String
 
-abstract class SaveOperation(T) < Operation
-  register_event :save
-  register_event :commit
+  abstract def do_run
 
-  def save(item : T)
-    run_event :run do
-      run_event :save do
-        run_event :commit do
-          puts "SAVING..."
-        end
-      end
-    end
+  def run
+    run_event :before_run
+    do_run
+    run_event :after_run, "moon"
   end
 end
 
-class MySaveOp < SaveOperation(String)
-  before_save :validation
-  before_save :modifying
-  after_commit :post_commit
-  after_run :finishing
-  after_save :saved
-  around_run :woah
+class MyOp < Operation
+  before_run :print_hello
+  after_run do |name|
+    puts "WOAH #{name}"
+  end
+  after_run :print_goodbye
 
-  def woah
-    puts "BEFORE"
-    result = yield
-    puts "AFTER"
+  def do_run
+    "Hello, world!"
   end
 
-  def validation
-    puts "Validating..."
+  def print_hello
+    puts "Hello!"
   end
 
-  def modifying
-    puts "Modifying..."
-  end
-
-  def post_commit
-    puts "Post committing..."
-  end
-
-  def finishing(result)
-    puts "Finishing..."
-  end
-
-  def saved
-    puts "Saved..."
+  def print_goodbye(name)
+    puts "Goodbye, #{name}"
   end
 end
 
@@ -60,6 +39,6 @@ describe Callback do
   # TODO: Write tests
 
   it "works" do
-    MySaveOp.new.save("string")
+    MyOp.new.run
   end
 end
