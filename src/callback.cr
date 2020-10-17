@@ -67,11 +67,24 @@ module Callback
               %param{index}
             {% end %}
           )
-          {% for _type, index in types %}
-            \{{ block.args[{{ index }}] }} = %param{index}
+          {% for type, index in types %}
+            \{% if block.args[{{ index }}] != nil %}
+              \{{ block.args[{{ index }}] }} = %param{index}
+            \{% end %}
           {% end %}
           \{{ block.body }}
         end
+      end
+    end
+
+    macro skip_{{ event_name.id }}(method_name)
+      def _{{ event_name.id }}
+        \{% if @type.methods.map(&.name).includes?(:_{{ event_name.id }}.id) %}
+          previous_def
+        \{% else %}
+          super
+        \{% end %}
+        _{{event_name.id}}_callbacks.delete(\{{ method_name.stringify }})
       end
     end
   end

@@ -1,37 +1,25 @@
 require "./spec_helper"
 
-abstract class Operation
+abstract class Operation(T)
   include Callback
 
   register_event :before_run
-  register_event :after_run, String
+  register_event :after_run, T
 
-  abstract def do_run
+  abstract def do_run : T
 
   def run
     run_event :before_run
-    do_run
-    run_event :after_run, "moon"
+    result = do_run
+    run_event :after_run, result
   end
 end
 
-class MyOp < Operation
-  before_run :print_hello
-  after_run do |name|
-    puts "WOAH #{name}"
-  end
-  after_run :print_goodbye
-
-  def do_run
-    "Hello, world!"
-  end
-
-  def print_hello
-    puts "Hello!"
-  end
-
-  def print_goodbye(name)
-    puts "Goodbye, #{name}"
+class MyOp < Operation(Int32)
+  before_run { puts "heyyyy" }
+  after_run { |x| puts "The number is #{x}" }
+  def do_run : Int32
+    32
   end
 end
 
