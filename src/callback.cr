@@ -24,12 +24,16 @@ module Callback
     def _{{ event_name.id }}
     end
 
-    macro {{ event_name.id }}(method_name)
+    macro {{ event_name.id }}(method_name, **args)
       def _{{ event_name.id }}
         \{% if @type.methods.map(&.name).includes?(:_{{ event_name.id }}.id) %}
           previous_def
         \{% else %}
           super
+        \{% end %}
+
+        \{% if args[:if] != nil %}
+          return unless \{{ args[:if] }}.call
         \{% end %}
         _{{event_name.id}}_callbacks[\{{ method_name.stringify }}] = ->(
           {% for type, index in types %}

@@ -30,6 +30,7 @@ end
 
 class ChildMyOp < MyOp
   skip_before_run :scary, if: ->{ true }
+  before_run :scary, if: ->{ false }
 end
 
 describe Callback do
